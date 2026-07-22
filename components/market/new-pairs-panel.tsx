@@ -5,7 +5,8 @@ import { Sparkles } from "lucide-react";
 import { usePolling } from "@/hooks/use-polling";
 import { LiveBadge } from "@/components/market/live-badge";
 import { TokenAvatar } from "@/components/market/token-avatar";
-import { formatPrice, formatAge } from "@/lib/format";
+import { RelativeAge } from "@/components/market/relative-age";
+import { formatPrice } from "@/lib/format";
 import type { MarketToken } from "@/lib/types";
 
 export function NewPairsPanel({ initial }: { initial: MarketToken[] }) {
@@ -37,8 +38,8 @@ export function NewPairsPanel({ initial }: { initial: MarketToken[] }) {
               <TokenAvatar src={t.imageUrl} symbol={t.symbol} size={28} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">{t.symbol}</span>
-                <span className="block truncate text-xs text-muted-foreground" suppressHydrationWarning>
-                  {formatAge(t.pairCreatedAt)} old
+                <span className="block truncate text-xs text-muted-foreground">
+                  <RelativeAge createdAt={t.pairCreatedAt} /> old
                 </span>
               </span>
               <span className="shrink-0 font-mono text-xs text-muted-foreground">{formatPrice(t.priceUsd)}</span>

@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/dialog";
 import { TokenAvatar } from "@/components/market/token-avatar";
 import { LiveBadge } from "@/components/market/live-badge";
+import { RelativeAge } from "@/components/market/relative-age";
 import { usePolling } from "@/hooks/use-polling";
-import { formatUsdCompact, formatAge } from "@/lib/format";
+import { formatUsdCompact } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { MarketToken, SniperRule } from "@/lib/types";
 import { toast } from "sonner";
@@ -193,8 +194,9 @@ export function SniperConsole({ initialRules, initialFeed }: { initialRules: Sni
                 <TokenAvatar src={t.imageUrl} symbol={t.symbol} size={26} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{t.symbol}</p>
-                  <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-                    {formatAge(t.pairCreatedAt)} old · liq {formatUsdCompact(t.liquidityUsd)} · buys(5m) {t.txnsM5?.buys ?? "—"}
+                  <p className="text-xs text-muted-foreground">
+                    <RelativeAge createdAt={t.pairCreatedAt} /> old · liq {formatUsdCompact(t.liquidityUsd)} · buys(5m){" "}
+                    {t.txnsM5?.buys ?? "—"}
                   </p>
                 </div>
               </li>

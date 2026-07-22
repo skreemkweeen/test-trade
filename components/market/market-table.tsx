@@ -7,7 +7,8 @@ import { TokenAvatar } from "@/components/market/token-avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { formatPrice, formatPct, formatUsdCompact, formatAge } from "@/lib/format";
+import { formatPrice, formatPct, formatUsdCompact } from "@/lib/format";
+import { RelativeAge } from "@/components/market/relative-age";
 import { cn } from "@/lib/utils";
 import type { MarketToken } from "@/lib/types";
 import type { PollStatus } from "@/hooks/use-polling";
@@ -150,11 +151,8 @@ export function MarketTable({
                   <TableCell className={cn("text-right text-sm tabular text-muted-foreground", HIDE_CLASS.lg)}>
                     {formatUsdCompact(t.liquidityUsd)}
                   </TableCell>
-                  <TableCell
-                    className={cn("text-right text-sm tabular text-muted-foreground", HIDE_CLASS.md)}
-                    suppressHydrationWarning
-                  >
-                    {formatAge(t.pairCreatedAt)}
+                  <TableCell className={cn("text-right text-sm tabular text-muted-foreground", HIDE_CLASS.md)}>
+                    <RelativeAge createdAt={t.pairCreatedAt} />
                   </TableCell>
                 </TableRow>
               ))}
