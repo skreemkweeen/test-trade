@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,36 +10,47 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Wallet, ShieldCheck } from "lucide-react";
+import { Sparkles, ShieldCheck, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { useDemoMode } from "@/lib/store/demo-mode";
 
 /**
- * MVP wallet flow: intentionally simulated. SatoVanta does not custody keys and does not
- * broadcast transactions in this build — connecting only unlocks the demo portfolio/copy-trading
- * state so the product can be evaluated end-to-end before real execution is wired up.
+ * There is no real wallet adapter in this build — nothing here should look or read like one.
+ * "Try demo" only flips a persisted local flag; it does not connect to any wallet, hold any
+ * keys, or change what data the Portfolio/Sniper/Copy-trading pages show (they already run in
+ * simulation mode regardless of this flag). The flag exists so "Demo mode" is a real, visible,
+ * shared piece of app state instead of implying a connection that isn't there.
  */
 export function WalletConnect() {
   const [open, setOpen] = useState(false);
-  const [connected, setConnected] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { active, activate, reset } = useDemoMode();
 
-  function handleConnect() {
-    setConnected(true);
+  // Avoid a hydration mismatch: persisted state is only known after the client reads
+  // localStorage, so render the same "inactive" state on server and pre-mount client.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setMounted(true), []);
+  const isActive = mounted && active;
+
+  function handleActivate() {
+    activate();
     setOpen(false);
-    toast.success("Demo wallet connected", {
-      description: "Simulation mode — no real wallet, keys, or transactions are involved.",
+    toast.success("Demo mode on", {
+      description: "No wallet, keys, or on-chain transactions are involved — this only flips a local flag.",
     });
   }
 
-  if (connected) {
+  function handleReset() {
+    reset();
+    toast("Demo mode off");
+  }
+
+  if (isActive) {
     return (
-      <Button
-        variant="outline"
-        size="sm"
-        className="gap-2 font-mono text-xs"
-        onClick={() => setConnected(false)}
-      >
+      <Button variant="outline" size="sm" className="gap-2 text-xs" onClick={handleReset}>
         <span className="h-1.5 w-1.5 rounded-full bg-gain" />
-        7xKX…f9Qm
+        Demo mode
+        <RotateCcw className="h-3 w-3 text-muted-foreground" />
       </Button>
     );
   }
@@ -47,27 +58,33 @@ export function WalletConnect() {
   return (
     <>
       <Button size="sm" className="gap-2" onClick={() => setOpen(true)}>
-        <Wallet className="h-4 w-4" />
-        Connect
+        <Sparkles className="h-4 w-4" />
+        Try demo
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary" />
-              Connect a demo wallet
+              Turn on demo mode
             </DialogTitle>
-            <DialogDescription className="text-left">
-              This MVP runs in simulation mode: no real wallet adapter, no private keys, and no
-              on-chain transactions are sent. Connecting unlocks a sample portfolio and
-              copy-trading demo state.
+            <DialogDescription className="text-left space-y-2">
+              <span className="block">
+                There is no wallet connection here — this build has no wallet adapter, holds no
+                keys, and sends no on-chain transactions. Turning this on just remembers your
+                preference in this browser (a single flag in local storage, nothing else).
+              </span>
+              <span className="block">
+                Portfolio, Sniper, and Copy-trading already run on illustrative demo data whether
+                or not this is on.
+              </span>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleConnect}>Use demo wallet</Button>
+            <Button onClick={handleActivate}>Turn on</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

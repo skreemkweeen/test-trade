@@ -75,5 +75,8 @@ export async function getScreenerPool(chain = "solana") {
 export async function searchMarket(query: string, chain = "solana") {
   if (!query.trim()) return [];
   const results = await searchPairs(query);
-  return results.filter((t) => t.chainId === chain).slice(0, 20);
+  return results
+    .filter((t) => t.chainId === chain)
+    .filter(isSanePricing)
+    .slice(0, 20);
 }

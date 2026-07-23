@@ -8,10 +8,16 @@ import { formatUsdCompact, formatPct } from "@/lib/format";
 export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
-  const [movers, newPairs] = await Promise.all([getMovers("movers", "solana"), getNewPairs("solana")]);
+  const [movers, newPairs, gainers] = await Promise.all([
+    getMovers("movers", "solana"),
+    getNewPairs("solana"),
+    getMovers("gainers", "solana"),
+  ]);
 
   const totalVolume = movers.reduce((sum, t) => sum + (t.volume24h ?? 0), 0);
-  const topGainer = [...movers].sort((a, b) => (b.priceChange.h24 ?? 0) - (a.priceChange.h24 ?? 0))[0];
+  // Sourced from the same ranked list as the Gainers tab (not just the top-volume-50 set used
+  // for the table below), so this can never show a different token than #1 in that tab.
+  const topGainer = gainers[0];
 
   return (
     <div className="space-y-6">
@@ -24,7 +30,7 @@ export default async function DashboardPage() {
         <StatCard label="24h volume tracked" value={formatUsdCompact(totalVolume)} icon={Activity} />
         <StatCard label="Liquid pairs" value={String(movers.length)} icon={Zap} />
         <StatCard
-          label="Top gainer (24h)"
+          label="Top liquid gainer (24h)"
           value={topGainer ? topGainer.symbol : "—"}
           sub={topGainer ? formatPct(topGainer.priceChange.h24) : undefined}
           icon={TrendingUp}

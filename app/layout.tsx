@@ -53,7 +53,11 @@ export default function RootLayout({
         >
           <TooltipProvider delayDuration={150}>
             {children}
-            <Toaster position="bottom-right" />
+            <Toaster
+              position="bottom-right"
+              offset={24}
+              mobileOffset={{ bottom: "calc(64px + env(safe-area-inset-bottom))" }}
+            />
           </TooltipProvider>
         </ThemeProvider>
       </body>

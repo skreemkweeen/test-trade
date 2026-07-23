@@ -4,36 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { formatPrice, formatPct } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { useTokenSearch } from "@/hooks/use-token-search";
+import { SearchResultList } from "@/components/shell/search-result-list";
 import type { MarketToken } from "@/lib/types";
 
+/** Desktop/wide-viewport inline search — a dropdown under a persistent input. Below md, the
+ *  shell renders MobileSearchTrigger instead, which opens a full-screen sheet: an inline input
+ *  this small cannot stay usable next to the other header controls under ~640px. */
 export function GlobalSearch() {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<MarketToken[]>([]);
-  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (query.trim().length < 2) {
-      return;
-    }
-    // Debounced search-in-flight indicator, synchronizing UI with the external fetch below.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    const handle = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/market/search?q=${encodeURIComponent(query)}`);
-        const json = await res.json();
-        setResults(json.data ?? []);
-      } finally {
-        setLoading(false);
-      }
-    }, 300);
-    return () => clearTimeout(handle);
-  }, [query]);
+  const { results, loading } = useTokenSearch(query);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -52,7 +35,7 @@ export function GlobalSearch() {
   }
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-sm">
+    <div ref={containerRef} className="relative hidden w-full max-w-sm md:block">
       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         value={query}
@@ -71,39 +54,7 @@ export function GlobalSearch() {
 
       {open && query.trim().length >= 2 && (
         <div className="absolute top-11 left-0 right-0 z-50 max-h-80 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
-          {results.length === 0 && !loading && (
-            <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-              No tokens found for &ldquo;{query}&rdquo;
-            </p>
-          )}
-          {results.map((t) => {
-            const change = t.priceChange.h24;
-            return (
-              <button
-                key={t.id}
-                onClick={() => go(t)}
-                className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
-              >
-                <span className="flex items-center gap-2 min-w-0">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold uppercase">
-                    {t.symbol.slice(0, 2)}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate font-medium">{t.symbol}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{t.name}</span>
-                  </span>
-                </span>
-                <span className="shrink-0 text-right tabular">
-                  <span className="block font-mono text-xs">{formatPrice(t.priceUsd)}</span>
-                  {typeof change === "number" && (
-                    <span className={cn("block text-xs", change >= 0 ? "text-gain" : "text-loss")}>
-                      {formatPct(change)}
-                    </span>
-                  )}
-                </span>
-              </button>
-            );
-          })}
+          <SearchResultList query={query} results={results} loading={loading} onSelect={go} />
         </div>
       )}
     </div>
